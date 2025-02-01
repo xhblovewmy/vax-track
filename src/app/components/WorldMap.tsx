@@ -42,7 +42,7 @@ export default function WorldMap({ loadingText }: IProps) {
 
         if (!mounted) return;
 
-        // 注册地图数据
+        // @ts-expect-error 注册地图数据
         echarts.registerMap("world", geoJson);
 
         // 初始化 ECharts 实例
