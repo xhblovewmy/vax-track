@@ -1,12 +1,33 @@
-import { useState } from "react";
+"use client";
+import { useAppStore } from "@/store/app";
+import DataTable from "./components/DataTable";
+import ModeSwitch from "./components/ModeSwitch";
+// import SearchForm from "./components/SearchForm";
 import WorldMap from "./components/WorldMap";
-import "@/app/globals.css";
+import config from "@/app/assets/config.json";
+import { useEffect } from "react";
+
 export default function Page() {
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const updateMap = useAppStore((s) => s.updateMap);
+
+  useEffect(() => {
+    updateMap();
+  }, [updateMap]);
 
   return (
-    <div>
-      <WorldMap />
+    <div className="flex flex-col h-screen">
+      <div className="p-4 bg-zinc-100 space-y-4">
+        <header className="flex justify-between">
+          <h1 className="text-2xl font-bold text-center">{config.title}</h1>
+          {/* <SearchForm /> */}
+          <ModeSwitch />
+        </header>
+      </div>
+
+      <div className="flex flex-1">
+        <WorldMap loadingText={config.loadingText} />
+        <DataTable />
+      </div>
     </div>
   );
 }

@@ -3,46 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 import * as echarts from "echarts";
 import { LoadingSpinner } from "./LoadingSpinner";
-import config from "@/app/assets/config.json";
+import { IData } from "@/types/app";
+import { EMode, useAppStore } from "@/store/app";
+import { useShallow } from "zustand/react/shallow";
 
-export default function WorldMap() {
+interface IProps {
+  loadingText: string;
+}
+
+export default function WorldMap({ loadingText }: IProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // 模拟医疗数据
-  const mockData = [
-    {
-      name: "China",
-      value: 800,
-      details: {
-        population: "14亿",
-        doctors: "200万",
-        hospitals: "5000家",
-      },
-    },
-    {
-      name: "United States",
-      value: 900,
-      details: {
-        population: "3.3亿",
-        doctors: "100万",
-        hospitals: "6000家",
-      },
-    },
-    {
-      name: "Japan",
-      value: 700,
-      details: {
-        population: "1.26亿",
-        doctors: "30万",
-        hospitals: "3000家",
-      },
-    },
-  ];
+  const { shouldRender, mode, mapData } = useAppStore(
+    useShallow((s) => ({
+      shouldRender: s.mode === EMode.MAP || s.mode === EMode.BOTH,
+      mode: s.mode,
+      mapData: s.mapData,
+    }))
+  );
 
   useEffect(() => {
+    if (mode === EMode.TABLE || mapData.length === 0) return;
     let mounted = true;
 
     const initChart = async () => {
@@ -67,61 +50,46 @@ export default function WorldMap() {
 
         const option = {
           backgroundColor: "#ffffff",
-          title: {
-            text: config.title,
-            left: "center",
-            top: 20,
-            textStyle: {
-              color: "#333333",
-              fontSize: 24,
-              fontWeight: "bold",
-            },
-          },
           tooltip: {
             trigger: "item",
             showDelay: 0,
             transitionDuration: 0.2,
-            formatter: function (params: any) {
+            formatter: function (params: {
+              name: string;
+              value: number;
+              data: IData;
+            }) {
               const { name, value, data } = params;
-              if (!data?.details) return name;
+              if (!data.details) return name;
 
               return `  
                 <div style="font-weight: bold; margin-bottom: 5px;">${name}</div>  
-                <div>医疗指数: ${value || "暂无数据"}</div>  
-                <div>人口: ${data.details.population || "暂无数据"}</div>  
-                <div>医生数量: ${data.details.doctors || "暂无数据"}</div>  
-                <div>医院数量: ${data.details.hospitals || "暂无数据"}</div>  
+                <div>Uptake outcome: ${value + "%"}</div>  
+                <div>Interverntion: ${data.details.intervention}</div>  
+                <div>Description of total population: ${
+                  data.details.desc
+                }</div>  
               `;
             },
           },
           visualMap: {
             left: "right",
             min: 0,
-            max: 1000,
+            max: 100,
             inRange: {
               color: ["#e5f7ff", "#096dd9"],
             },
-            text: ["高", "低"],
+            text: ["heigh", "low"],
             calculable: true,
             dimension: 0,
             orient: "vertical",
             right: 26,
             bottom: 40,
-            show: true,
-          },
-          toolbox: {
-            show: true,
-            left: "left",
-            top: "top",
-            feature: {
-              dataView: { readOnly: false },
-              restore: {},
-              saveAsImage: {},
-            },
+            show: false,
           },
           series: [
             {
-              name: config.serieName,
+              name: "World Map",
               type: "map",
               map: "world",
               roam: true,
@@ -153,7 +121,7 @@ export default function WorldMap() {
                 borderColor: "#d9d9d9",
                 borderWidth: 1,
               },
-              data: mockData,
+              data: mapData,
             },
           ],
         };
@@ -162,22 +130,22 @@ export default function WorldMap() {
         chartInstance.current.setOption(option);
 
         // 添加事件监听
-        chartInstance.current.on("click", function (params: any) {
-          if (params.componentType === "series") {
-            const data = params.data;
-            if (data?.details) {
-              alert(`  
-                国家: ${params.name}  
-                医疗指数: ${data.value}  
-                人口: ${data.details.population}  
-                医生数量: ${data.details.doctors}  
-                医院数量: ${data.details.hospitals}  
-              `);
-            } else {
-              alert(`国家: ${params.name}\n暂无详细数据`);
-            }
-          }
-        });
+        // chartInstance.current.on("click", function (params: any) {
+        //   if (params.componentType === "series") {
+        //     const data = params.data;
+        //     if (data?.details) {
+        //       alert(`
+        //         国家: ${params.name}
+        //         医疗指数: ${data.value}
+        //         人口: ${data.details.population}
+        //         医生数量: ${data.details.doctors}
+        //         医院数量: ${data.details.hospitals}
+        //       `);
+        //     } else {
+        //       alert(`国家: ${params.name}\n暂无详细数据`);
+        //     }
+        //   }
+        // });
 
         setIsLoading(false);
       } catch (err) {
@@ -200,21 +168,25 @@ export default function WorldMap() {
       window.removeEventListener("resize", handleResize);
       chartInstance.current?.dispose();
     };
-  }, []);
+  }, [mode, mapData]);
+
+  if (!shouldRender) {
+    return null;
+  }
 
   if (error) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
+      <div className="h-full flex-1 flex items-center justify-center">
         <div className="text-red-500">错误: {error}</div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-screen  relative">
+    <div className="h-full grow-[2] shrink-[2] basis-0 relative">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
-          <LoadingSpinner loadingText={config.loadingText} />
+          <LoadingSpinner loadingText={loadingText} />
         </div>
       )}
       <div ref={chartRef} className="w-full h-full min-h-[500px]" />

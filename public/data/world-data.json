@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Spain",
+    "value": 60.2,
+    "details": {
+      "intervention": "Nirsevimab",
+      "desc": "Infants under 6 months old hospitalised with bronchiolitis",
+      "uptakeOutcome": "60.20%"
+    }
+  },
+  {
+    "name": "United States",
+    "value": 70,
+    "details": {
+      "intervention": "Nirsevimab",
+      "desc": "Infants under 12 months old hospitalised with acute respiratory infection",
+      "uptakeOutcome": "0.00%"
+    }
+  }
+]
