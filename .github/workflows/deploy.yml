@@ -24,8 +24,8 @@ jobs:
         run: npm install
 
       # Step 4: 运行 npm run process-csv
-      - name: Process CSV
-        run: npm run process-csv
+      # - name: Process CSV
+      #   run: npm run process-csv
 
       # Step 5: 构建项目
       - name: Build project
@@ -35,5 +35,5 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} # 使用 GitHub 提供的 token
+          github_token: ${{ secrets.VAR_TRACK_TOKEN }} # 使用 GitHub 提供的 token
           publish_dir: ./out # 发布 out 目录中的内容
